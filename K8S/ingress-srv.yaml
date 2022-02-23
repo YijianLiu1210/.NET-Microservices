@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress                                      # expose HTTP and HTTPS routes from outside cluster to services within the cluster
+                                                   # we should use NodePort / LoadBalancer to expose services other than HTTP / HTTPS (eg. TCP) to the internet
+                                                   # Ingress can help us expose multiple services under the same IP address ??????? under the same host????
+                                                   # provide (1) load balancing (2) SSL termination (3) name-based virtual hosting
+                                                   # to use Ingress, we must deploy an Ingress controller
+metadata:
+  name: ingress-srv
+  annotations:
+    kubernetes.io/ingress.class: nginx             # NGINX: a web server that can be used as a reverse proxy, load balancer, mail proxy, HTTP / web cache
+                                                   #        reverse proxy: forward client requests to back-end app, help increase scalability, performance, resilience and security
+                                                   # ingress-nginx is an Ingress controller for K8S
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+spec:
+  rules:                                           # rules for directing HTTP(S) traffic
+    - host: acme.com                               # the following rules only apply to this host
+      http: 
+        paths:                                     # define a list of paths, each has an associated backend
+          - path: /api/platforms                   # the incoming request must match both the host and path, then the load balancer will direct it to the referenced Service
+                                                   # eg. "http://acme.com/api/platforms/" is a valid request
+            pathType: Prefix
+            backend:
+              service:
+                name: platforms-clusterip-srv
+                port:
+                  number: 80                       # this port number must match the "spec.ports.port" filed defined in the Service
+          - path: /api/c/platforms
+            pathType: Prefix
+            backend:  
+              service:  
+                name: commands-clusterip-srv
+                port: 
+                  number: 80

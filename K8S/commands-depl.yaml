@@ -1,0 +1,97 @@
+# K8S: orchestrate application containers within and across computer clusters, automate the distribution and scheduling
+# Cluster: (1) Control Plane: manage the cluster
+#              (1) kube-apiserver: front-end of the Control Plane, expose K8S API (HTTP API, we can use kubectl CLI to perform operations), can scale horizontally
+#              (2) etcd: key-value store, store K8S cluster data
+#              (3) kube-scheduler: schedule which pods run on which nodes
+#              (4) kube-controller-manager: all controllers (eg. Node controller, Job controller...) run as a single process
+#              (5) cloud-controller-manager: all controllers (eg. Route Controller, Service Controller...) run as a single process, link K8S cluster into cloud provider’s API
+#          (2) Node: a VM / computer
+#              (1) kubelet
+#                  ensure containers described in the PodSpecs are running on pods and healthy (eg. re-start failed containers)
+#                  communicate with the Control Plane: eg. register the node with kube-apiserver
+#              (2) kube-proxy
+#                  implement a form of virtual IP for "Service"s?????????
+#                  maintain network connections to pods from network sessions inside / outside the cluster
+#              (3) Pod: the smallest deployable units of computing that we can create and manage in K8S
+#                       a pod runs a single instance of a given application
+#                       a pod is a group of tightly-coupled containers, with shared storage and network resources
+#                       each pod has a unique IP address, which is dynamically asigned when the pod is started / re-started
+#                       every container uses the same IP address, port space, IPC (inter-process communication) namespace, shared volumes
+#                       inside a pod, containers can communicate one another using "localhost" / IPC (pipe, socket, file, signal, shared memory, message queue)
+#                       pods talk to each other via "ClusterIP" service
+#                       * why we need pod: there are different types of containers, if without pods, K8S needs additional information for each container to directly manage them (eg. re-start policy)
+#                       * why not wrap all those containers as one: run multiple processes in one container is hard to troubleshoot ("one process per container" principle)
+#                       use case of multi-container pod: co-locate helper processes with the primary application
+#                           (1) sidecar: log watcher, data loader...
+#                           (2) proxy, bridge, adapter: connect the main container with the external world, eg. Apache HTTP server, router...
+
+# K8S object: a "record of intent" -- once you create the object, the Kubernetes system will constantly work to ensure that object exists
+#     types: Pod, NodePort, LoadBalancer, Ingress, ClusterIP
+#            Deployment: instruct K8S how to create and update pods, one "Deployment" defines one pod !!!!!
+#            Service: when it is created, a corresponding DNS entry ("service-name.namespace.svc.cluster.local") is created
+#            Volume: a directory on disk / in another container
+#                    all types of volume can survive container failures
+#                    ephemeral volume types have a lifetime of a pod, if a pod is deleted, volume data are lost
+#                    persistent volumes exist beyond the lifetime of a pod
+#                    * why not just use disk space in a container? data cannot survive container failures
+#            DaemonSet: implement a single instance of a pod on all nodes
+#            ReplicaSet: ensure a defined number of pods are always running
+#            Job: ensure a pod properly runs to completion
+#            Label: key-value pairs used for association and filtering
+#            Namespace
+#            StatefulSet
+#            ConfigMap
+
+apiVersion: apps/v1      # which version of the K8S API to use to create this object
+kind: Deployment         # we can use a deployment without a servcie
+metadata:
+  name: commands-depl
+spec:
+  replicas: 1            # self-healing: K8S will constantly work to ensure 1 instance of this deployment / pod exists
+  selector:              # define how the Deployment finds which pods to manage
+    matchLabels:         # requirements of all "matchLabels" must be satisfied
+      app: commandservice
+  template:              # define the pod we will use
+    metadata:
+      labels:
+        app: commandservice
+    spec:
+      containers:        # containers run on the pod
+        - name: commandservice
+          image: yijian1210/commandservice:latest   # K8S will get the image from Docker Hub
+---
+apiVersion: v1           # v1: the 1st stable release of K8S API
+kind: Service            # Service: an abstraction while defines a logical set of pods (determined by selector), enable network access to the set of Pods
+                         #          a "Service" is a REST object in K8S
+                         #          2 types of "Service" (NodePort, LoadBalancer) can be exposed to the public internet (outside the cluster)
+                         #          (1) Cluster-IP: K8S assigns an IP address when the service is created, this IP is only available inside the cluster
+                         #          (2) External-IP: this IP is available on public internet
+                         #          (3) Port(s): internal-port:external-port
+                         #                       we can access this service through the internal port(s), which is defined in the "spec.ports.port" field
+                         #                       the external port (3xxxx) is assigned by K8S which is exposed to the public internet
+                         # we can use a service without a deployment, then we need to create each pod individually
+metadata:
+  name: commands-clusterip-srv   # winthin the cluster, we can access this service using this name instead of its cluster IP
+                                 # eg. "http://commands-clusterip-srv:80"
+spec:
+  type: ClusterIP        # help cross-pod communication, while each pod can have varying IP address
+                         # expose the service on a cluster-internal IP, the service is only reachable from within the cluster
+  selector:              # when a network request is made to the service, it selects all Pods in the cluster matching the service's selector, choose one of them (round robin), and forward the request to it
+    app: commandservice
+  ports: 
+    - name: commandservice
+      protocol: TCP
+      port: 80           # the Service redirect requests sent to "port" to a "targetPort"
+      targetPort: 80     # this Service will target TCP port 80 on any pod with the label "app: commandservice"
+                         # by default and for convenience, the targetPort is set to the same value as the port field
+                         # the pod / application needs to be listening on this port????????how??????do we need to set it up????????????
+                         # we can also use the defined name of the port of a pod, when the port number of a pod changes, we can still use the port name to find the pod
+
+# "kubectl apply -f commands-depl.yaml": once the deployment is applied, K8S will start all configured pods and containers
+# "kubectl get deployments"
+# "kubectl get pods"
+
+# K8S will automatically recover even we stop / delete the container
+# only if we run "kubectl delete deployment platforms-depl", K8S will take everything down and stop recovering
+
+# Q: why cluster IP is needed??????? to mask the change of pod IP / port?

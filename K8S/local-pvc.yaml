@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim  # PV: a piece of storage in the cluster that has been provisioned by an administrator / dynamically provisioned using Storage Class
+                             # PVC: a request for storage by a user
+                             # pod consumes node resources, PVC consumes PV resources
+metadata:
+  name: mssql-claim
+spec: 
+  accessModes:
+    - ReadWriteMany          # ReadWriteOnce: the volume can be RW by a single node
+                             # ReadOnlyMany: the volume can be R by many nodes
+                             # ReadWriteMany: the volume can be RW by many nodes
+                             # ReadWriteOncePod: the volume can be RW by a single pod
+  resources:
+    requests:
+      storage: 200Mi
