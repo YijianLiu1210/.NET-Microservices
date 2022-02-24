@@ -12,7 +12,8 @@
 #              (2) kube-proxy
 #                  implement a form of virtual IP for "Service"s?????????
 #                  maintain network connections to pods from network sessions inside / outside the cluster
-#              (3) Pod: the smallest deployable units of computing that we can create and manage in K8S
+#              (3) container runtime: responsible for running containers
+#              (4) Pod: the smallest deployable units of computing that we can create and manage in K8S
 #                       a pod runs a single instance of a given application
 #                       a pod is a group of tightly-coupled containers, with shared storage and network resources
 #                       each pod has a unique IP address, which is dynamically asigned when the pod is started / re-started
@@ -26,7 +27,10 @@
 #                           (2) proxy, bridge, adapter: connect the main container with the external world, eg. Apache HTTP server, router...
 
 # K8S object: a "record of intent" -- once you create the object, the Kubernetes system will constantly work to ensure that object exists
-#     types: Pod, NodePort, LoadBalancer, Ingress, ClusterIP
+#     types: namespaced object: Deployment, Service...
+#            cluster-wide object: StorageClass, Node, PersistentVolume...
+#            ......
+#            Pod, NodePort, LoadBalancer, Ingress, ClusterIP
 #            Deployment: instruct K8S how to create and update pods, one "Deployment" defines one pod !!!!!
 #            Service: when it is created, a corresponding DNS entry ("service-name.namespace.svc.cluster.local") is created
 #            Volume: a directory on disk / in another container
