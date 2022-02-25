@@ -1,22 +1,41 @@
+// how to use gRPC: 
+// (1) Define a service in a .proto file
+// (2) Generate server and client code using the protocol buffer compiler
+// (3) Use the C# gRPC API to write a simple client and server for your service
+
+// gRPC provides protocol buffer compiler plugins that generate client- and server-side code
+// gRPC users typically call these APIs on the client side and implement the corresponding API on the server side
+// Server: implements the methods declared by the service
+//         runs a gRPC server to handle client calls
+// Client: stub -- implements the same methods as the service
+//         The client can then just call those methods on the local object, wrapping the parameters for the call (defined in the "message")
+//         gRPC sends the request to the server and returns the response
+
 syntax = "proto3";
 
 option csharp_namespace = "PlatformService";
 
-service GrpcPlatform
+service GrpcPlatform         // define an RPC service interface
 {
+    // Protocol Buffer compiler will generate: (1) an abstract interface "GetAllPlatforms" in C# (2) a "stub" implementation
+    // The stub forwards all calls to an RpcChannel
     rpc GetAllPlatforms (GetAllRequest) returns (PlatformResponse);
 }
 
-message GetAllRequest {}
+message GetAllRequest {}     // use "message" to define the data structure that we want to serialize
 
 message GrpcPlatformModel 
 {
-    int32 platformId = 1;    // 1 is the position number
+    int32 platformId = 1;    // 1 is the position number, used to identify the fields in the message binary format, and should not be changed once the message type is in use
     string name = 2;
     string publisher = 3;
 }
 
 message PlatformResponse
 {
+    // field rules
+    // required: a well-formed message must have exactly one of this field
+    // optional: a well-formed message can have zero or one of this field (but not more than one)
+    // repeated: this field can be repeated any number of times (>= 0), the order of the repeated values will be preserved
     repeated GrpcPlatformModel platform = 1;
 }
