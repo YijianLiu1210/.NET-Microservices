@@ -3,6 +3,8 @@ using CommandsService.Models;
 
 namespace CommandsService.Data
 {
+    // Repository pattrern: a repository is a class defined for an entity, with all the operations possible on that specific entity
+    // Unit Of Work: a single transaction that involves multiple operations
     public interface ICommandRepo
     {
         bool SaveChanges();

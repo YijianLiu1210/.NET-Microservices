@@ -9,7 +9,7 @@ namespace PlatformService.Data
     {
         private readonly AppDbContext _context;
 
-        public PlatformRepo(AppDbContext context)
+        public PlatformRepo(AppDbContext context)  // when an instance of PlatformRepo is created, a DbContext instance is also created
         {
             _context = context;
         }

@@ -245,7 +245,7 @@ namespace PlatformService {
     public const int PlatformIdFieldNumber = 1;
     private int platformId_;
     /// <summary>
-    /// 1 is the position number
+    /// 1 is the position number, used to identify the fields in the message binary format, and should not be changed once the message type is in use
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -510,6 +510,12 @@ namespace PlatformService {
     private static readonly pb::FieldCodec<global::PlatformService.GrpcPlatformModel> _repeated_platform_codec
         = pb::FieldCodec.ForMessage(10, global::PlatformService.GrpcPlatformModel.Parser);
     private readonly pbc::RepeatedField<global::PlatformService.GrpcPlatformModel> platform_ = new pbc::RepeatedField<global::PlatformService.GrpcPlatformModel>();
+    /// <summary>
+    /// field rules
+    /// required: a well-formed message must have exactly one of this field
+    /// optional: a well-formed message can have zero or one of this field (but not more than one)
+    /// repeated: this field can be repeated any number of times (>= 0), the order of the repeated values will be preserved
+    /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public pbc::RepeatedField<global::PlatformService.GrpcPlatformModel> Platform {
